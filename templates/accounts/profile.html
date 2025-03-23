@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - University Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">My Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            <div class="border rounded-circle p-3 d-inline-block mb-3">
+                                <i class="fas fa-user-circle fa-6x text-muted"></i>
+                            </div>
+                            <h5>{{ user.get_full_name }}</h5>
+                            <p class="text-muted">{{ user.get_user_type_display }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 35%">Username:</th>
+                                            <td>{{ user.username }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Full Name:</th>
+                                            <td>{{ user.get_full_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td>{{ user.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Department:</th>
+                                            <td>{{ user.department.name }}</td>
+                                        </tr>
+                                        {% if user.is_student %}
+                                        <tr>
+                                            <th>Registration Number:</th>
+                                            <td>{{ user.registration_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Enrolled Courses:</th>
+                                            <td>{{ user.enrollments.count }}</td>
+                                        </tr>
+                                        {% elif user.is_lecturer %}
+                                        <tr>
+                                            <th>Staff Number:</th>
+                                            <td>{{ user.staff_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Courses Teaching:</th>
+                                            <td>{{ user.courses_teaching.count }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr>
+                                            <th>Member Since:</th>
+                                            <td>{{ user.date_joined|date:"F d, Y" }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user.is_student %}
+                    <div class="mt-4">
+                        <h5 class="mb-3">Recent Activity</h5>
+                        <div class="list-group">
+                            {% for submission in user.submissions.all|slice:":5" %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ submission.assignment.title }}</h6>
+                                    <small>{{ submission.submitted_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-1">{{ submission.assignment.course.name }}</p>
+                                {% if submission.marks %}
+                                <small class="text-muted">Score: {{ submission.marks }}/{{ submission.assignment.total_marks }}</small>
+                                {% else %}
+                                <small class="text-warning">Pending Grade</small>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <div class="list-group-item">
+                                <p class="mb-0 text-muted">No recent submissions</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 text-end">
+                        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">
+                            Edit Profile
+                        </a>
+                        <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-secondary">
+                            Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

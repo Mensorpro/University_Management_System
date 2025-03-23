@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Submission Details - {{ submission.assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'courses:course_detail' submission.assignment.course.id %}">
+                    {{ submission.assignment.course.code }}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'assignments:assignment_detail' submission.assignment.id %}">
+                    {{ submission.assignment.title }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Submission</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Submission Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="card-title h4 mb-0">Submission Details</h2>
+                        <span class="badge bg-light text-dark">
+                            {{ submission.assignment.total_marks }} Points
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>Submitted By</h5>
+                        <p class="mb-1">{{ submission.student.get_full_name }}</p>
+                        <p class="text-muted mb-0">{{ submission.student.registration_number }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Submission Time</h5>
+                        <p class="mb-0">
+                            {{ submission.submitted_at|date:"M d, Y H:i" }}
+                            {% if submission.is_late %}
+                                <span class="badge bg-warning">Late Submission</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Submission Content</h5>
+                        <div class="p-3 bg-light rounded">
+                            {{ submission.content|linebreaks }}
+                        </div>
+                    </div>
+
+                    {% if submission.marks %}
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">Grading Details</h5>
+                            <p class="mb-1">Score: {{ submission.marks }}/{{ submission.assignment.total_marks }}</p>
+                            {% if submission.feedback %}
+                                <hr>
+                                <p class="mb-0">Feedback: {{ submission.feedback }}</p>
+                            {% endif %}
+                            <p class="mb-0">
+                                <small class="text-muted">
+                                    Graded by: {{ submission.graded_by.get_full_name }} 
+                                    on {{ submission.graded_at|date:"M d, Y H:i" }}
+                                </small>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            {% if user == submission.assignment.course.lecturer and not submission.marks %}
+                <!-- Grading Form -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="card-title h5 mb-0">Grade Submission</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'assignments:grade_submission' submission.id %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="marks" class="form-label">Score (out of {{ submission.assignment.total_marks }})</label>
+                                <input type="number" class="form-control" id="marks" name="marks" 
+                                       min="0" max="{{ submission.assignment.total_marks }}" step="0.1" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="feedback" class="form-label">Feedback</label>
+                                <textarea class="form-control" id="feedback" name="feedback" rows="4"></textarea>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">Submit Grade</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Assignment Information -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="card-title h5 mb-0">Assignment Information</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Due Date:</dt>
+                        <dd class="col-sm-7">{{ submission.assignment.due_date|date:"M d, Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-5">Course:</dt>
+                        <dd class="col-sm-7">{{ submission.assignment.course.name }}</dd>
+                        
+                        <dt class="col-sm-5">Lecturer:</dt>
+                        <dd class="col-sm-7">{{ submission.assignment.course.lecturer.get_full_name }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

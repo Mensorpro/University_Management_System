@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Assignments - University Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Assignments</h1>
+        {% if user.is_lecturer %}
+            <a href="{% url 'assignments:pending_submissions' %}" class="btn btn-primary">
+                View Pending Submissions
+            </a>
+        {% endif %}
+    </div>
+
+    {% if assignments %}
+        <div class="row">
+            {% for assignment in assignments %}
+                <div class="col-md-6 mb-4">
+                    <div class="card {% if assignment.is_past_due %}border-danger{% endif %}">
+                        <div class="card-header {% if assignment.is_past_due %}bg-danger text-white{% else %}bg-primary text-white{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">{{ assignment.title }}</h5>
+                                <span class="badge bg-light text-dark">
+                                    {{ assignment.total_marks }} Points
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-2">
+                                Course: {{ assignment.course.code }} - {{ assignment.course.name }}
+                            </p>
+                            <p class="mb-3">{{ assignment.description|truncatewords:30 }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="mb-0">
+                                        <strong>Due: </strong>
+                                        <span {% if assignment.is_past_due %}class="text-danger"{% endif %}>
+                                            {{ assignment.due_date|date:"M d, Y H:i" }}
+                                        </span>
+                                    </p>
+                                </div>
+                                {% if user.is_student %}
+                                    {% if assignment.submissions.exists %}
+                                        <a href="{% url 'assignments:submission_detail' assignment.submissions.first.id %}" 
+                                           class="btn btn-success btn-sm">View Submission</a>
+                                    {% else %}
+                                        <a href="{% url 'assignments:submit_assignment' assignment.id %}" 
+                                           class="btn btn-primary btn-sm">Submit Assignment</a>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="btn-group">
+                                        <a href="{% url 'assignments:assignment_detail' assignment.id %}" 
+                                           class="btn btn-primary btn-sm">View Details</a>
+                                        <a href="{% url 'assignments:edit_assignment' assignment.id %}" 
+                                           class="btn btn-outline-primary btn-sm">Edit</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if user.is_lecturer %}
+                            <div class="card-footer">
+                                <small class="text-muted">
+                                    Submissions: {{ assignment.submissions.count }} / 
+                                    {{ assignment.course.enrollments.count }} students
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <p class="mb-0">
+                {% if user.is_student %}
+                    You don't have any assignments yet.
+                {% else %}
+                    You haven't created any assignments yet.
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
