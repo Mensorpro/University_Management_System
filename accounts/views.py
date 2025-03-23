@@ -4,6 +4,7 @@ from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.db.models import Count, Q
 from django.utils import timezone
+from django.urls import reverse
 from .forms import UserRegistrationForm, CustomAuthenticationForm, ProfileEditForm
 from courses.models import Course
 from assignments.models import Assignment, Submission
@@ -14,9 +15,9 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         if self.request.user.is_student():
-            return 'accounts:student_dashboard'
+            return reverse('accounts:student_dashboard')
         else:
-            return 'accounts:lecturer_dashboard'
+            return reverse('accounts:lecturer_dashboard')
 
 def register(request):
     if request.method == 'POST':
