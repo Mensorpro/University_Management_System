@@ -1,35 +1,45 @@
 from django.contrib import admin
-from django.utils import timezone
 from .models import Assignment, Submission
-
-class SubmissionInline(admin.TabularInline):
-    model = Submission
-    extra = 0
-    readonly_fields = ('submitted_at', 'is_late')
-    raw_id_fields = ('student', 'graded_by')
 
 @admin.register(Assignment)
 class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ('title', 'course', 'due_date', 'total_marks', 'is_active', 'is_past_due')
-    list_filter = ('course__department', 'is_active', 'due_date')
+    list_display = ('title', 'course', 'due_date', 'total_marks', 'submission_count')
+    list_filter = ('course__department', 'due_date', 'course')
     search_fields = ('title', 'course__code', 'course__name')
-    raw_id_fields = ('course', 'created_by')
-    inlines = [SubmissionInline]
+    date_hierarchy = 'due_date'
     
-    def is_past_due(self, obj):
-        return timezone.now() > obj.due_date
-    is_past_due.boolean = True
-    is_past_due.short_description = 'Past Due'
+    def submission_count(self, obj):
+        return obj.submissions.count()
+    submission_count.short_description = 'Submissions'
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            if request.user.is_lecturer():
+                return qs.filter(course__lecturer=request.user)
+        return qs
 
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ('student', 'assignment', 'status', 'marks', 'submitted_at', 'is_late')
-    list_filter = ('status', 'assignment__course')
-    search_fields = ('student__username', 'assignment__title')
-    raw_id_fields = ('student', 'assignment', 'graded_by')
+    list_display = ('student', 'assignment', 'submitted_at', 'marks', 'is_late')
+    list_filter = (
+        'submitted_at',
+        'assignment__course',
+        ('marks', admin.EmptyFieldListFilter),  # Use EmptyFieldListFilter for nullable fields
+    )
+    search_fields = ('student__username', 'assignment__title', 'assignment__course__code')
+    date_hierarchy = 'submitted_at'
     readonly_fields = ('submitted_at', 'is_late')
-    
-    def is_late(self, obj):
-        return obj.submitted_at > obj.assignment.due_date if obj.submitted_at else False
-    is_late.boolean = True
-    is_late.short_description = 'Submitted Late'
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            if request.user.is_lecturer():
+                return qs.filter(assignment__course__lecturer=request.user)
+            elif request.user.is_student():
+                return qs.filter(student=request.user)
+        return qs
+
+    def has_add_permission(self, request):
+        # Only allow adding submissions through the website interface
+        return False

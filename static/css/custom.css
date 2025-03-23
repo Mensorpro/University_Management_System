@@ -1,103 +1,109 @@
-/* Custom styles for University Management System */
-
-/* Navbar customization */
-.navbar-brand {
-    font-weight: 600;
+/* General Styles */
+body {
+    background-color: #f8f9fa;
 }
 
-/* Card customization */
+/* Dashboard Styles */
+.stats .badge {
+    font-size: 1rem;
+    margin-left: 0.5rem;
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: #0d6efd;
+    transition: width 0.6s ease;
+}
+
+/* Course Cards */
 .card {
+    border: none;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    margin-bottom: 1.5rem;
-}
-
-.card-header {
-    font-weight: 500;
-}
-
-/* Status badges */
-.badge {
-    font-weight: 500;
-}
-
-/* Form styling */
-.form-label {
-    font-weight: 500;
-}
-
-.invalid-feedback {
-    font-size: 85%;
-}
-
-/* Dashboard statistics */
-.stat-card {
     transition: transform 0.2s;
 }
 
-.stat-card:hover {
+.card:hover {
     transform: translateY(-2px);
 }
 
-/* Assignment status indicators */
-.assignment-status {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 5px;
+.card-header {
+    background-color: #fff;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-.status-pending {
-    background-color: #ffc107;
+/* Badges and Status Indicators */
+.badge {
+    padding: 0.5em 0.75em;
 }
 
-.status-submitted {
-    background-color: #17a2b8;
+.badge.bg-success {
+    background-color: #198754 !important;
 }
 
-.status-graded {
-    background-color: #28a745;
+.badge.bg-warning {
+    color: #000 !important;
 }
 
-.status-late {
-    background-color: #dc3545;
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
 }
 
-/* Course and assignment cards */
-.course-card, .assignment-card {
-    height: 100%;
+/* List Group Items */
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 1rem;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Buttons */
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Icons */
+.fas {
+    width: 1.25em;
+    text-align: center;
+}
+
+/* Course Progress */
+.progress-wrapper {
+    margin: 1rem 0;
+}
+
+.progress-label {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
 }
 
-.course-card .card-body, .assignment-card .card-body {
-    flex: 1;
-}
-
-/* Profile section */
-.profile-header {
-    background-color: #f8f9fa;
-    padding: 2rem 0;
-    margin-bottom: 2rem;
-}
-
-.profile-img {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 5px solid #fff;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-/* Responsive tweaks */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-    .card-title {
-        font-size: 1.1rem;
+    .stats {
+        margin-top: 1rem;
     }
     
-    .profile-img {
-        width: 100px;
-        height: 100px;
+    .stats .badge {
+        display: block;
+        margin: 0.5rem 0;
     }
 }

@@ -1,7 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
 
-def custom_404(request, exception):
-    return render(request, 'core/404.html', status=404)
-
-def custom_500(request):
-    return render(request, 'core/500.html', status=500)
+@login_required
+def home(request):
+    """
+    Redirect users to their appropriate dashboard based on their user type
+    """
+    if request.user.is_student():
+        return redirect('accounts:student_dashboard')
+    else:
+        return redirect('accounts:lecturer_dashboard')

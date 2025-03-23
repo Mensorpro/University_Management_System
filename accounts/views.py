@@ -2,11 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from django.utils import timezone
 from django.urls import reverse
 from .forms import UserRegistrationForm, CustomAuthenticationForm, ProfileEditForm
-from courses.models import Course
+from courses.models import Course, Enrollment
 from assignments.models import Assignment, Submission
 
 class CustomLoginView(LoginView):
@@ -52,28 +52,61 @@ def student_dashboard(request):
         messages.error(request, 'Access denied. Students only.')
         return redirect('home')
     
-    enrollments = request.user.enrollments.select_related(
+    # Get student's enrollments with course data
+    enrollments = Enrollment.objects.filter(
+        student=request.user
+    ).select_related(
         'course',
         'course__lecturer',
         'course__department'
     )
     
-    # Get upcoming assignments
-    upcoming_assignments = Assignment.objects.filter(
-        course__enrollments__student=request.user,
-        due_date__gt=timezone.now()
-    ).order_by('due_date')[:5]
+    # Get all assignments from enrolled courses
+    enrolled_course_ids = enrollments.values_list('course_id', flat=True)
+    all_assignments = Assignment.objects.filter(course_id__in=enrolled_course_ids)
+    total_assignments = all_assignments.count()
     
-    # Get recent submissions
-    recent_submissions = request.user.submissions.select_related(
-        'assignment',
-        'assignment__course'
-    ).order_by('-submitted_at')[:5]
+    # Get completed assignments (with submissions)
+    submitted_assignment_ids = request.user.submissions.values_list('assignment_id', flat=True)
+    completed_assignments = len(submitted_assignment_ids)
+    
+    # Get pending (unsubmitted and not past due) assignments
+    pending_assignments_list = Assignment.objects.filter(
+        course_id__in=enrolled_course_ids,
+        due_date__gt=timezone.now()
+    ).exclude(
+        id__in=submitted_assignment_ids
+    ).select_related(
+        'course'
+    ).order_by('due_date')
+    
+    # Calculate course progress and averages
+    for enrollment in enrollments:
+        # Get all assignments for this course
+        course_assignments = all_assignments.filter(course=enrollment.course)
+        total = course_assignments.count()
+        completed = request.user.submissions.filter(
+            assignment__course=enrollment.course
+        ).count()
+        
+        # Calculate average score for graded assignments
+        avg_score = request.user.submissions.filter(
+            assignment__course=enrollment.course,
+            marks__isnull=False
+        ).aggregate(avg=Avg('marks'))['avg']
+        
+        # Attach data to enrollment object
+        enrollment.total_assignments = total
+        enrollment.completed_assignments = completed
+        enrollment.progress_percentage = (completed / total * 100) if total > 0 else 0
+        enrollment.average_score = round(avg_score, 1) if avg_score else None
     
     context = {
         'enrollments': enrollments,
-        'upcoming_assignments': upcoming_assignments,
-        'recent_submissions': recent_submissions
+        'total_assignments': total_assignments,
+        'completed_assignments': completed_assignments,
+        'pending_assignments': total_assignments - completed_assignments,
+        'pending_assignments_list': pending_assignments_list
     }
     
     return render(request, 'accounts/student_dashboard.html', context)

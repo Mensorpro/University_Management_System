@@ -1,19 +1,15 @@
+"""
+URL configuration for university_management project.
+"""
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
-
-@login_required
-def home_redirect(request):
-    if request.user.is_student():
-        return redirect('accounts:student_dashboard')
-    elif request.user.is_lecturer():
-        return redirect('accounts:lecturer_dashboard')
-    else:
-        return redirect('admin:index')
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.generic import RedirectView
+from core.views import home
 
 urlpatterns = [
-    path('', home_redirect, name='home'),
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('schools/', include('schools.urls')),
@@ -21,11 +17,12 @@ urlpatterns = [
     path('assignments/', include('assignments.urls')),
 ]
 
-# Custom error handlers
-handler404 = 'core.views.custom_404'
-handler500 = 'core.views.custom_500'
+# Add favicon url pattern
+urlpatterns += [
+    path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico')),
+]
 
-# Configure admin site
-admin.site.site_header = 'University Management System'
-admin.site.site_title = 'UMS Admin Portal'
-admin.site.index_title = 'Administration'
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

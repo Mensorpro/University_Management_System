@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Student Dashboard - University Management System{% endblock %}
 
@@ -38,17 +39,18 @@
                     <h5 class="card-title mb-0">Pending Assignments</h5>
                 </div>
                 <div class="card-body">
-                    {% if pending_assignments %}
+                    {% if pending_assignments_list %}
                         <div class="list-group list-group-flush">
-                            {% for assignment in pending_assignments %}
+                            {% for assignment in pending_assignments_list %}
                                 <div class="list-group-item">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1">{{ assignment.title }}</h6>
                                         <small class="text-danger">Due: {{ assignment.due_date|date:"M d, Y" }}</small>
                                     </div>
                                     <p class="mb-1">{{ assignment.course.code }} - {{ assignment.course.name }}</p>
-                                    <a href="{% url 'submit_assignment' assignment.id %}" class="btn btn-sm btn-primary mt-2">
-                                        Submit Assignment
+                                    <a href="{% url 'assignments:submit_assignment' assignment.id %}" 
+                                       class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-paper-plane me-1"></i>Submit Assignment
                                     </a>
                                 </div>
                             {% endfor %}
@@ -76,33 +78,39 @@
                                     <th>Course</th>
                                     <th>Assignments Completed</th>
                                     <th>Average Score</th>
-                                    <th>Status</th>
+                                    <th>Progress</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for enrollment in enrollments %}
-                                    <tr>
-                                        <td>{{ enrollment.course.code }} - {{ enrollment.course.name }}</td>
-                                        <td>
-                                            {% with completed=enrollment.course.assignments.count %}
-                                                {{ enrollment.student.submissions.filter.count }}/{{ completed }}
-                                            {% endwith %}
-                                        </td>
-                                        <td>
-                                            {% with avg_score=enrollment.student.submissions.filter.aggregate.avg_marks %}
-                                                {% if avg_score %}
-                                                    {{ avg_score|floatformat:1 }}%
-                                                {% else %}
-                                                    N/A
-                                                {% endif %}
-                                            {% endwith %}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{{ enrollment.status|lower }}">
-                                                {{ enrollment.get_status_display }}
-                                            </span>
-                                        </td>
-                                    </tr>
+                                    {% with progress=enrollment.get_progress %}
+                                        <tr>
+                                            <td>{{ enrollment.course.code }} - {{ enrollment.course.name }}</td>
+                                            <td>
+                                                {{ progress.completed_assignments }}/{{ progress.total_assignments }}
+                                            </td>
+                                            <td>
+                                                {% with avg=enrollment.get_average_score %}
+                                                    {% if avg %}
+                                                        {{ avg|floatformat:1 }}%
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: {{ progress.progress_percentage }}%"
+                                                         aria-valuenow="{{ progress.progress_percentage }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                        {{ progress.progress_percentage|floatformat:0 }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endwith %}
                                 {% empty %}
                                     <tr>
                                         <td colspan="4" class="text-center">No course data available</td>

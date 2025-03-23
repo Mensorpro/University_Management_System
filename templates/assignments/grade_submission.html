@@ -17,54 +17,80 @@
                     {{ submission.assignment.title }}
                 </a>
             </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'assignments:submission_detail' submission.id %}">
-                    Submission
-                </a>
-            </li>
-            <li class="breadcrumb-item active">Grade</li>
+            <li class="breadcrumb-item active">Grade Submission</li>
         </ol>
     </nav>
 
     <div class="row">
+        <!-- Submission Details -->
         <div class="col-md-8">
-            <!-- Submission Content -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h2 class="card-title h4 mb-0">Student Submission</h2>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <h5>Submitted By</h5>
+                    <div class="mb-4">
+                        <h5>Submitted By:</h5>
                         <p class="mb-1">{{ submission.student.get_full_name }}</p>
-                        <p class="text-muted mb-0">{{ submission.student.registration_number }}</p>
+                        <p class="text-muted mb-0">
+                            {{ submission.student.registration_number }} - 
+                            {{ submission.student.department }}
+                        </p>
                     </div>
 
-                    <div class="mb-3">
-                        <h5>Submission Time</h5>
+                    <div class="mb-4">
+                        <h5>Submission Time:</h5>
                         <p class="mb-0">
                             {{ submission.submitted_at|date:"M d, Y H:i" }}
                             {% if submission.is_late %}
-                                <span class="badge bg-warning">Late Submission</span>
+                                <span class="badge bg-warning ms-2">Late Submission</span>
                             {% endif %}
                         </p>
                     </div>
 
-                    <div class="mb-3">
-                        <h5>Submission Content</h5>
-                        <div class="p-3 bg-light rounded">
-                            {{ submission.content|linebreaks }}
+                    {% if submission.content %}
+                        <div class="mb-4">
+                            <h5>Text Submission:</h5>
+                            <div class="p-3 bg-light rounded">
+                                {{ submission.content|linebreaks }}
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
+
+                    {% if submission.file %}
+                        <div class="mb-4">
+                            <h5>File Submission:</h5>
+                            <div class="p-3 bg-light rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-file-pdf text-danger me-3 fa-2x"></i>
+                                    <div>
+                                        <p class="mb-1">Submitted File:</p>
+                                        <div class="btn-group">
+                                            <a href="{{ submission.file.url }}" 
+                                               class="btn btn-primary"
+                                               target="_blank">
+                                                <i class="fas fa-eye me-1"></i>View File
+                                            </a>
+                                            <a href="{{ submission.file.url }}" 
+                                               class="btn btn-outline-primary"
+                                               download>
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
+        <!-- Grading Form -->
         <div class="col-md-4">
-            <!-- Grading Form -->
             <div class="card">
                 <div class="card-header bg-success text-white">
-                    <h3 class="card-title h5 mb-0">Grade Submission</h3>
+                    <h2 class="card-title h4 mb-0">Grade Submission</h2>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -84,11 +110,10 @@
                             </label>
                             <input type="number" name="{{ form.marks.name }}" 
                                    class="form-control {% if form.marks.errors %}is-invalid{% endif %}" 
-                                   id="{{ form.marks.id_for_label }}" 
+                                   id="{{ form.marks.id_for_label }}"
                                    min="0" 
-                                   max="{{ submission.assignment.total_marks }}" 
+                                   max="{{ submission.assignment.total_marks }}"
                                    step="0.1"
-                                   value="{{ form.marks.value|default:'' }}"
                                    required>
                             {% if form.marks.errors %}
                                 <div class="invalid-feedback">
@@ -97,13 +122,13 @@
                             {% endif %}
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="{{ form.feedback.id_for_label }}" class="form-label">Feedback</label>
                             <textarea name="{{ form.feedback.name }}" 
                                     class="form-control {% if form.feedback.errors %}is-invalid{% endif %}" 
-                                    id="{{ form.feedback.id_for_label }}" 
+                                    id="{{ form.feedback.id_for_label }}"
                                     rows="5"
-                                    placeholder="Provide feedback to the student...">{{ form.feedback.value|default:'' }}</textarea>
+                                    placeholder="Provide feedback for the student"></textarea>
                             {% if form.feedback.errors %}
                                 <div class="invalid-feedback">
                                     {{ form.feedback.errors.0 }}
@@ -111,31 +136,16 @@
                             {% endif %}
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'assignments:submission_detail' submission.id %}" 
-                               class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-success">Submit Grade</button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>Submit Grade
+                            </button>
+                            <a href="{% url 'assignments:assignment_detail' submission.assignment.id %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
                         </div>
                     </form>
-                </div>
-            </div>
-
-            <!-- Assignment Information -->
-            <div class="card mt-4">
-                <div class="card-header bg-info text-white">
-                    <h4 class="card-title h5 mb-0">Assignment Information</h4>
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-5">Due Date:</dt>
-                        <dd class="col-sm-7">{{ submission.assignment.due_date|date:"M d, Y H:i" }}</dd>
-                        
-                        <dt class="col-sm-5">Total Marks:</dt>
-                        <dd class="col-sm-7">{{ submission.assignment.total_marks }}</dd>
-                        
-                        <dt class="col-sm-5">Course:</dt>
-                        <dd class="col-sm-7">{{ submission.assignment.course.name }}</dd>
-                    </dl>
                 </div>
             </div>
         </div>
